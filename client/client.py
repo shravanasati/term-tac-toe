@@ -1,8 +1,7 @@
 import requests
 from rich.prompt import Prompt
 
-
-base_server_url = "https://127.0.0.1:8000"
+base_server_url = "http://127.0.0.1:8000"
 
 if __name__ == "__main__":
     prompt_text = "What do you want to do? \n1. Create a room \n2. Join a room\n"
