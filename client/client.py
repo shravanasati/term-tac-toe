@@ -3,6 +3,10 @@ from rich.prompt import Prompt
 
 base_server_url = "http://127.0.0.1:8000"
 
+# todo add validation for player name, must not be greater than 50 chars
+# todo check for websocket redirect url in join room response
+# todo commas and symbols not allowed in player name
+
 if __name__ == "__main__":
     prompt_text = "What do you want to do? \n1. Create a room \n2. Join a room\n"
     choice = Prompt.ask(prompt_text, choices=["1", "2"])

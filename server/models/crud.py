@@ -2,11 +2,35 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql.functions import now
 
 from .dbmodels import Room
-# todo add players to database from join function
 
 
-def get_room_by_id(db: Session, room_id: str):
+def get_room_by_id(db: Session, room_id: str) -> Room | None:
     return db.query(Room).filter(Room.room_id == room_id).first()
+
+
+def add_player_to_room(db: Session, room_id: str, player_name: str) -> bool:
+    """
+    Adds `player_name` to the room with given `room_id`.
+
+    Returns boolean value of whether player was added to the room (by checking room capacity.)
+    """
+    room: Room = db.query(Room).filter(Room.room_id == room_id).first()
+
+    if "," in player_name:
+        return False
+
+    if room.player1 == "":
+        room.player1 = player_name
+        db.commit()
+        return True
+
+    elif room.player2 == "":
+        room.player2 = player_name
+        db.commit()
+        return True
+
+    else:
+        return False
 
 
 def get_active_rooms(db: Session):
