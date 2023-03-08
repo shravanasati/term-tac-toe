@@ -33,7 +33,7 @@ t.start()
 
 @app.get("/")
 async def root():
-    return HTMLResponse("The website is under development :)")
+    return HTMLResponse("<h1> The website is under development :) </h1>")
 
 
 @app.post("/rooms/create")
@@ -59,15 +59,23 @@ async def create_room() -> CreateRoomResponse:
 @app.post("/rooms/join")
 async def join_room(room_request: JoinRoomRequest) -> JoinRoomResponse:
     try:
+        failure_response = JoinRoomResponse(
+            success=False, message="", websocket_redirect=""
+        )
         db = get_db()
         room = crud.get_room_by_id(db, room_request.room_id)
 
         if not room:
-            return JoinRoomResponse(
-                success=False,
-                message=f"Room with room id `{room_request.room_id}` doesn't exist.",
-                websocket_redirect="",
+            failure_response.message = (
+                f"Room with room id `{room_request.room_id}` doesn't exist."
             )
+            return failure_response
+
+        if not room.is_active:
+            failure_response.message = (
+                "This room is no longer active. Create a new room to continue playing."
+            )
+            return failure_response
 
         ok = crud.add_player_to_room(
             db, room_request.room_id, room_request.player_name[:50]
@@ -78,20 +86,16 @@ async def join_room(room_request: JoinRoomRequest) -> JoinRoomResponse:
             return JoinRoomResponse(
                 success=True,
                 message=f"Successfully added player `{room_request.player_name}` to room with id `{room_request.room_id}`.",
-                websocket_redirect=""
-            )
-
-        else:
-            return JoinRoomResponse(
-                success=False,
-                message="Room is already full.",
                 websocket_redirect="",
             )
 
+        else:
+            failure_response.message = "This room is already full."
+            return failure_response
+
     except Exception as e:
         logging.exception(e)
-        return JoinRoomResponse(
-            success=False,
-            message="An internal server error occured.",
-            websocket_redirect="",
+        failure_response.message = (
+            "An internal error occured in the server. Try again later."
         )
+        return failure_response
