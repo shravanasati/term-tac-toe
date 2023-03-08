@@ -1,5 +1,6 @@
+from datetime import datetime
+
 from sqlalchemy.orm import Session
-from sqlalchemy.sql.functions import now
 
 from .dbmodels import Room
 
@@ -46,8 +47,12 @@ def create_room(db: Session, room_id: str):
 
 
 def update_active_rooms(db: Session):
-    active_rooms = get_active_rooms(db).filter(now - Room.created_on > 1)
-    for room in active_rooms:
-        db.delete(room)
+    # print("updating active rooms")
+    active_rooms = get_active_rooms(db).filter(Room.is_active)
 
-    db.flush()
+    for room in active_rooms:
+        hour_diff = datetime.now() - room.created_on
+        if hour_diff.seconds > 60 * 60:
+            db.delete(room)
+
+    db.commit()

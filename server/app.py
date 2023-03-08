@@ -1,6 +1,10 @@
 import logging
+from threading import Thread
+from time import sleep
+
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
+import schedule
 
 from models import crud
 from models.database import Base, engine
@@ -13,6 +17,18 @@ from utils import generate_room_id, get_db, ConnectionManager
 Base.metadata.create_all(bind=engine)
 app = FastAPI()
 conn_manager = ConnectionManager()
+
+schedule.every().minute.do(crud.update_active_rooms, db=get_db())
+
+
+def cleaning_job():
+    while True:
+        schedule.run_pending()
+        sleep(1)
+
+
+t = Thread(target=cleaning_job)
+t.start()
 
 
 @app.get("/")
