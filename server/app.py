@@ -11,7 +11,7 @@ from models.database import Base, engine
 from models.responses import CreateRoomResponse, JoinRoomResponse
 from models.requests import JoinRoomRequest
 
-from utils import generate_room_id, get_db, ConnectionManager
+from utils import generate_room_id, generate_url_token, get_db, ConnectionManager
 
 
 Base.metadata.create_all(bind=engine)
@@ -32,12 +32,12 @@ t.start()
 
 
 @app.get("/")
-async def root():
+def root():
     return HTMLResponse("<h1> The website is under development :) </h1>")
 
 
 @app.post("/rooms/create")
-async def create_room() -> CreateRoomResponse:
+def create_room() -> CreateRoomResponse:
     try:
         db = get_db()
         room_id = generate_room_id()
@@ -57,10 +57,10 @@ async def create_room() -> CreateRoomResponse:
 
 
 @app.post("/rooms/join")
-async def join_room(room_request: JoinRoomRequest) -> JoinRoomResponse:
+def join_room(room_request: JoinRoomRequest) -> JoinRoomResponse:
     try:
         failure_response = JoinRoomResponse(
-            success=False, message="", websocket_redirect=""
+            success=False, message="", websocket_redirect="", token=""
         )
         db = get_db()
         room = crud.get_room_by_id(db, room_request.room_id)
@@ -77,8 +77,9 @@ async def join_room(room_request: JoinRoomRequest) -> JoinRoomResponse:
             )
             return failure_response
 
-        ok = crud.add_player_to_room(
-            db, room_request.room_id, room_request.player_name[:50]
+        security_token = generate_url_token()
+        ok, message = crud.add_player_to_room(
+            db, room_request.room_id, room_request.player_name[:50], security_token
         )
 
         if ok:
@@ -87,10 +88,11 @@ async def join_room(room_request: JoinRoomRequest) -> JoinRoomResponse:
                 success=True,
                 message=f"Successfully added player `{room_request.player_name}` to room with id `{room_request.room_id}`.",
                 websocket_redirect="",
+                token=security_token
             )
 
         else:
-            failure_response.message = "This room is already full."
+            failure_response.message = message
             return failure_response
 
     except Exception as e:
@@ -99,3 +101,8 @@ async def join_room(room_request: JoinRoomRequest) -> JoinRoomResponse:
             "An internal error occured in the server. Try again later."
         )
         return failure_response
+
+
+@app.websocket("/game/{room}")
+def gameplay(token: str):
+    pass

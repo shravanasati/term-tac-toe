@@ -9,7 +9,7 @@ def get_room_by_id(db: Session, room_id: str) -> Room | None:
     return db.query(Room).filter(Room.room_id == room_id).first()
 
 
-def add_player_to_room(db: Session, room_id: str, player_name: str) -> bool:
+def add_player_to_room(db: Session, room_id: str, player_name: str, token: str) -> tuple[bool, str]:
     """
     Adds `player_name` to the room with given `room_id`.
 
@@ -18,20 +18,28 @@ def add_player_to_room(db: Session, room_id: str, player_name: str) -> bool:
     room: Room = db.query(Room).filter(Room.room_id == room_id).first()
 
     if "," in player_name:
-        return False
+        return False, "Invalid name. Player name can't contain any symbols. Only letters and numbers are allowed."
 
     if room.player1 == "":
+        if player_name == room.player2:
+            return False, "A player with the same name already exists in the room. Try again with a different name."
+
         room.player1 = player_name
+        room.token1 = token
         db.commit()
-        return True
+        return True, ""
 
     elif room.player2 == "":
+        if player_name == room.player1:
+            return False, "A player with the same name already exists in the room. Try again with a different name."
+
         room.player2 = player_name
+        room.token2 = token
         db.commit()
-        return True
+        return True, ""
 
     else:
-        return False
+        return False, "This room is already full."
 
 
 def get_active_rooms(db: Session):

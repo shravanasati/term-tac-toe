@@ -11,3 +11,4 @@ class JoinRoomResponse(BaseModel):
     success: bool
     message: str
     websocket_redirect: str
+    token: str
