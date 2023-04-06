@@ -1,7 +1,9 @@
 import requests
 from rich.prompt import Prompt
+from websocket.sync.client import connect
 
 base_server_url = "http://127.0.0.1:8000"
+base_server_ws = "ws://127.0.0.1:8000"
 
 # todo add validation for player name, must not be greater than 50 chars
 # todo check for websocket redirect url in join room response
@@ -27,7 +29,20 @@ if __name__ == "__main__":
         else:
             room_id = resp["room_id"]
             print(f"Room with room id `{room_id}` created successfully.")
-            # websocket here
+            player = Prompt.ask("Enter a nickname")
+            payload = {"room_id": room_id, "player_name": player}
+            join_req = requests.post(f"{base_server_url}/rooms/join")
+            if not join_req["success"]:
+                print("Unable to join the room.")
+                print(join_req["message"])
+                quit(1)
+
+            redirect = join_req["websocket_redirect"]
+            token = join_req["token"]
+            websocket_url = f"{base_server_ws}{redirect}?token={token}"
+            with connect(websocket_url) as client:
+                client.send("lmao ded")
+
             print("Waiting for another player to join...")
 
     else:

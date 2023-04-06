@@ -53,6 +53,16 @@ def add_player_to_room(
         return False, "This room is already full."
 
 
+def verify_player(db: Session, room_id: str, token: str) -> tuple[bool, str]:
+    room: Room = get_room_by_id(room_id)
+    if room.token1 == token:
+        return True, room.player1
+    elif room.token2 == token:
+        return True, room.player2
+    else:
+        return False, ""
+
+
 def get_active_rooms(db: Session):
     return db.query(Room).filter(Room.is_active)
 

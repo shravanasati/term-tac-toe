@@ -3,7 +3,7 @@ from threading import Thread
 from time import sleep
 
 import schedule
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 
 from models import crud
@@ -11,12 +11,7 @@ from models.database import Base, engine
 from models.requests import JoinRoomRequest
 from models.responses import CreateRoomResponse, JoinRoomResponse
 
-from utils import (
-    ConnectionManager,
-    generate_room_id,
-    generate_url_token,
-    get_db
-)
+from utils import ConnectionManager, generate_room_id, generate_url_token, get_db
 
 Base.metadata.create_all(bind=engine)
 app = FastAPI()
@@ -87,11 +82,10 @@ def join_room(room_request: JoinRoomRequest) -> JoinRoomResponse:
         )
 
         if ok:
-            # todo return websocket url
             return JoinRoomResponse(
                 success=True,
                 message=f"Successfully added player `{room_request.player_name}` to room with id `{room_request.room_id}`.",
-                websocket_redirect="",
+                websocket_redirect=f"/game/{room_request.room_id}",
                 token=security_token,
             )
 
@@ -108,5 +102,23 @@ def join_room(room_request: JoinRoomRequest) -> JoinRoomResponse:
 
 
 @app.websocket("/game/{room}")
-def gameplay(token: str):
-    pass
+async def gameplay(websocket: WebSocket, room: str, token: str):
+    await conn_manager.connect(websocket)
+    try:
+        db = get_db()
+        verified, player_name = crud.verify_player(db, room, token)
+        if verified:
+            return {"message": "cannot verify the player"}
+
+        while True:
+            data = await websocket.receive_text()
+            await conn_manager.send_personal_message(f"You wrote: {data}", websocket)
+            await conn_manager.broadcast(f"Client #{player_name} says: {data}")
+
+    except WebSocketDisconnect:
+        conn_manager.disconnect(websocket)
+        await conn_manager.broadcast(f"Client #{player_name} left the game.")
+
+    except Exception as e:
+        print(e)
+        return {"message": "An internal server error occured. Try again later."}
