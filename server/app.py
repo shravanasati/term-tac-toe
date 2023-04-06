@@ -110,6 +110,8 @@ async def gameplay(websocket: WebSocket, room: str, token: str):
         if verified:
             return {"message": "cannot verify the player"}
 
+        await websocket.send_text("connection established")
+
         while True:
             data = await websocket.receive_text()
             await conn_manager.send_personal_message(f"You wrote: {data}", websocket)

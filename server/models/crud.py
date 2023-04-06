@@ -54,7 +54,7 @@ def add_player_to_room(
 
 
 def verify_player(db: Session, room_id: str, token: str) -> tuple[bool, str]:
-    room: Room = get_room_by_id(room_id)
+    room: Room = get_room_by_id(db, room_id)
     if room.token1 == token:
         return True, room.player1
     elif room.token2 == token:
