@@ -1,5 +1,5 @@
-import string
 import secrets
+import string
 
 from fastapi import WebSocket
 

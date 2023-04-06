@@ -2,17 +2,21 @@ import logging
 from threading import Thread
 from time import sleep
 
+import schedule
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-import schedule
 
 from models import crud
 from models.database import Base, engine
-from models.responses import CreateRoomResponse, JoinRoomResponse
 from models.requests import JoinRoomRequest
+from models.responses import CreateRoomResponse, JoinRoomResponse
 
-from utils import generate_room_id, generate_url_token, get_db, ConnectionManager
-
+from utils import (
+    ConnectionManager,
+    generate_room_id,
+    generate_url_token,
+    get_db
+)
 
 Base.metadata.create_all(bind=engine)
 app = FastAPI()
@@ -88,7 +92,7 @@ def join_room(room_request: JoinRoomRequest) -> JoinRoomResponse:
                 success=True,
                 message=f"Successfully added player `{room_request.player_name}` to room with id `{room_request.room_id}`.",
                 websocket_redirect="",
-                token=security_token
+                token=security_token,
             )
 
         else:
