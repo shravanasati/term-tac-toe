@@ -44,18 +44,33 @@ def generate_url_token() -> str:
 
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: list[WebSocket] = []
+        self.active_connections: list[tuple[str, WebSocket]] = []
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, room_id: str, websocket: WebSocket):
         await websocket.accept()
-        self.active_connections.append(websocket)
+        self.active_connections.append((room_id, websocket))
+
+    def __find_conn_by_websocket(self, websocket: WebSocket):
+        for conn in self.active_connections:
+            if conn[1] == websocket:
+                return conn
+
+    def __find_all_conn_by_room(self, room: str):
+        websocket_list = []
+        for conn in self.active_connections:
+            if conn[0] == room:
+                websocket_list.append(conn[1])
+
+        return websocket_list
 
     def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+        self.active_connections.remove(self.__find_conn_by_websocket(websocket))
 
     async def send_personal_message(self, message: str, websocket: WebSocket):
-        await websocket.send_text(message)
+        conn = self.__find_conn_by_websocket(websocket)
+        await conn[1].send_text(message)
 
-    async def broadcast(self, message: str):
-        for connection in self.active_connections:
-            await connection.send_text(message)
+    async def broadcast(self, room: str, message: str):
+        connections = self.__find_all_conn_by_room(room)
+        for conn in connections:
+            await conn.send_text(message)

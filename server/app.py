@@ -104,28 +104,28 @@ def join_room(room_request: JoinRoomRequest) -> JoinRoomResponse:
 
 @app.websocket("/game/{room}")
 async def gameplay(websocket: WebSocket, room: str, token: str):
-    await conn_manager.connect(websocket)
+    await conn_manager.connect(room, websocket)
     try:
         db = get_db()
         verified, player_name = crud.verify_player(db, room, token)
         if not verified:
             json_str = json.dumps({"message": "cannot verify the player"})
             await conn_manager.send_personal_message(json_str, websocket)
+            await conn_manager.disconnect(websocket)
 
-        await websocket.send_text("connection established")
+        await conn_manager.send_personal_message("connection established", websocket)
 
         while True:
             data = await websocket.receive_text()
             await conn_manager.send_personal_message(f"You wrote: {data}", websocket)
-            await conn_manager.broadcast(f"Client #{player_name} says: {data}")
+            await conn_manager.broadcast(room, f"Client #{player_name} says: {data}")
 
     except WebSocketDisconnect:
         conn_manager.disconnect(websocket)
-        await conn_manager.broadcast(f"Client #{player_name} left the game.")
+        await conn_manager.broadcast(room, f"Client #{player_name} left the game.")
 
     except Exception as e:
         print(e)
         json_str = json.dumps({"message": "An internal server error occured. Try again later."})
         await conn_manager.send_personal_message(json_str, websocket)
         await conn_manager.disconnect(websocket)
-
