@@ -1,3 +1,4 @@
+import json
 import logging
 from threading import Thread
 from time import sleep
@@ -107,8 +108,9 @@ async def gameplay(websocket: WebSocket, room: str, token: str):
     try:
         db = get_db()
         verified, player_name = crud.verify_player(db, room, token)
-        if verified:
-            return {"message": "cannot verify the player"}
+        if not verified:
+            json_str = json.dumps({"message": "cannot verify the player"})
+            await conn_manager.send_personal_message(json_str, websocket)
 
         await websocket.send_text("connection established")
 
@@ -123,4 +125,7 @@ async def gameplay(websocket: WebSocket, room: str, token: str):
 
     except Exception as e:
         print(e)
-        return {"message": "An internal server error occured. Try again later."}
+        json_str = json.dumps({"message": "An internal server error occured. Try again later."})
+        await conn_manager.send_personal_message(json_str, websocket)
+        await conn_manager.disconnect(websocket)
+
