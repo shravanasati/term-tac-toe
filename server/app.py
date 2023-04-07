@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 from threading import Thread
@@ -102,12 +103,12 @@ def join_room(room_request: JoinRoomRequest) -> JoinRoomResponse:
         return failure_response
 
 
-@app.websocket("/game/{room}")
-async def gameplay(websocket: WebSocket, room: str, token: str):
-    await conn_manager.connect(room, websocket)
+@app.websocket("/game/{room_id}")
+async def gameplay(websocket: WebSocket, room_id: str, token: str):
+    await conn_manager.connect(room_id, websocket)
     try:
         db = get_db()
-        verified, player_name = crud.verify_player(db, room, token)
+        verified, player_name = crud.verify_player(db, room_id, token)
         if not verified:
             json_str = json.dumps({"message": "cannot verify the player"})
             await conn_manager.send_personal_message(json_str, websocket)
@@ -115,14 +116,24 @@ async def gameplay(websocket: WebSocket, room: str, token: str):
 
         await conn_manager.send_personal_message("connection established", websocket)
 
+        playable = crud.is_room_ready_to_play(db, room_id)
+        if not playable:
+            await conn_manager.send_personal_message("waiting for the other player to join...", websocket)
+
+        while not playable:
+            playable = crud.is_room_ready_to_play(db, room_id)
+            await asyncio.sleep(1)
+
+        await conn_manager.broadcast(room_id, "starting the game...")
+
         while True:
             data = await websocket.receive_text()
             await conn_manager.send_personal_message(f"You wrote: {data}", websocket)
-            await conn_manager.broadcast(room, f"Client #{player_name} says: {data}")
+            await conn_manager.broadcast(room_id, f"Client #{player_name} says: {data}")
 
     except WebSocketDisconnect:
         conn_manager.disconnect(websocket)
-        await conn_manager.broadcast(room, f"Client #{player_name} left the game.")
+        await conn_manager.broadcast(room_id, f"Client #{player_name} left the game.")
 
     except Exception as e:
         print(e)

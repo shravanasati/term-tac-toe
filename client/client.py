@@ -1,6 +1,6 @@
 import requests
 from rich.prompt import Prompt
-from websocket.sync.client import connect
+from websockets.sync.client import connect
 
 base_server_url = "http://127.0.0.1:8000"
 base_server_ws = "ws://127.0.0.1:8000"
@@ -31,7 +31,8 @@ if __name__ == "__main__":
             print(f"Room with room id `{room_id}` created successfully.")
             player = Prompt.ask("Enter a nickname")
             payload = {"room_id": room_id, "player_name": player}
-            join_req = requests.post(f"{base_server_url}/rooms/join")
+            join_req = requests.post(f"{base_server_url}/rooms/join", json=payload).json()
+            print(join_req)
             if not join_req["success"]:
                 print("Unable to join the room.")
                 print(join_req["message"])
