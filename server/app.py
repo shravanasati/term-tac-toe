@@ -127,7 +127,13 @@ async def gameplay(websocket: WebSocket, room_id: str, token: str):
         await conn_manager.broadcast(room_id, "starting the game...")
 
         while True:
-            data = await websocket.receive_text()
+            data = await websocket.receive_json()
+            match data["type"]:
+                case "quit":
+                    conn_manager.disconnect(websocket)
+                    await conn_manager.broadcast()
+                case "update":
+                    conn_manager
             await conn_manager.send_personal_message(f"You wrote: {data}", websocket)
             await conn_manager.broadcast(room_id, f"Client #{player_name} says: {data}")
 
