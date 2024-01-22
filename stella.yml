@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/shravanasati/stellapy/master/schema.json 
+browser: firefox
+include_only: ["*.py"]
+poll_interval: 500
+browser_wait_interval: 1000
+follow_symlinks: false
+scripts:
+- name: server
+  url: ''
+  command: uvicorn app:app
+  shell: false
+- name: client1
+  url: ''
+  command: 
+  - av
+  - python -m websockets ws://localhost:8000/game/68Hkal?token=ZpthO3NrREM5pGGXYeElUToX0iRtodZzJGco9TrtDhE
+  shell: false
+
+- name: client2
+  url: ''
+  command: 
+  - av
+  - python -m websockets ws://localhost:8000/game/68Hkal?token=SXCwYopP1m87VIP4bg2-jVrfD3KZorhFLMJyKeBHvto
+  shell: false

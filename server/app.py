@@ -7,6 +7,7 @@ from time import sleep
 import schedule
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
+import websockets
 
 from models import crud
 from models.database import Base, engine
@@ -116,28 +117,29 @@ async def gameplay(websocket: WebSocket, room_id: str, token: str):
 
         await conn_manager.send_personal_message("connection established", websocket)
 
-        playable = crud.is_room_ready_to_play(db, room_id)
+        playable = conn_manager.is_room_ready(room_id)
+
         if not playable:
             await conn_manager.send_personal_message("waiting for the other player to join...", websocket)
 
         while not playable:
-            playable = crud.is_room_ready_to_play(db, room_id)
-            await asyncio.sleep(1)
+            playable = conn_manager.is_room_ready(room_id)
+            await asyncio.sleep(0.1)
 
-        await conn_manager.broadcast(room_id, "starting the game...")
+        await conn_manager.send_personal_message(room_id, "starting the game...")
 
         while True:
             data = await websocket.receive_json()
             match data["type"]:
                 case "quit":
                     conn_manager.disconnect(websocket)
-                    await conn_manager.broadcast()
+                    await conn_manager.broadcast(room_id, f"{player_name} left the game.")
                 case "update":
                     conn_manager
             await conn_manager.send_personal_message(f"You wrote: {data}", websocket)
             await conn_manager.broadcast(room_id, f"Client #{player_name} says: {data}")
 
-    except WebSocketDisconnect:
+    except (WebSocketDisconnect, websockets.exceptions.ConnectionClosed):
         conn_manager.disconnect(websocket)
         await conn_manager.broadcast(room_id, f"Client #{player_name} left the game.")
 

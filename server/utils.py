@@ -56,7 +56,7 @@ class ConnectionManager:
                 return conn
 
     def __find_all_conn_by_room(self, room: str):
-        websocket_list = []
+        websocket_list: list[WebSocket] = []
         for conn in self.active_connections:
             if conn[0] == room:
                 websocket_list.append(conn[1])
@@ -68,9 +68,15 @@ class ConnectionManager:
 
     async def send_personal_message(self, message: str, websocket: WebSocket):
         conn = self.__find_conn_by_websocket(websocket)
+        if not conn:
+            raise Exception("unable to find conn")
         await conn[1].send_text(message)
+
+    def is_room_ready(self, room: str):
+        return len(self.__find_all_conn_by_room(room)) == 2
 
     async def broadcast(self, room: str, message: str):
         connections = self.__find_all_conn_by_room(room)
+        print(f"sending '{message=}' to {connections=} in {room=}")
         for conn in connections:
             await conn.send_text(message)
