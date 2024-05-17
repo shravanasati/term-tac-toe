@@ -9,16 +9,9 @@ scripts:
   url: ''
   command: uvicorn app:app
   shell: false
+
 - name: client1
   url: ''
   command: 
-  - av
-  - python -m websockets ws://localhost:8000/game/68Hkal?token=ZpthO3NrREM5pGGXYeElUToX0iRtodZzJGco9TrtDhE
-  shell: false
-
-- name: client2
-  url: ''
-  command: 
-  - av
-  - python -m websockets ws://localhost:8000/game/68Hkal?token=SXCwYopP1m87VIP4bg2-jVrfD3KZorhFLMJyKeBHvto
+  - python -m websockets ws://localhost:8000/game/BVpBDX?token=2aJiOYULnOpT1NLnMkEUtCV2nh2IbmEbn1I0-1ZwKgI
   shell: false

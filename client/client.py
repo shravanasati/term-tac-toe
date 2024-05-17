@@ -1,6 +1,6 @@
 import requests
 from rich.prompt import Prompt
-from websockets.sync.client import connect
+from websockets.sync import client
 
 base_server_url = "http://127.0.0.1:8000"
 base_server_ws = "ws://127.0.0.1:8000"
@@ -41,10 +41,14 @@ if __name__ == "__main__":
             redirect = join_req["websocket_redirect"]
             token = join_req["token"]
             websocket_url = f"{base_server_ws}{redirect}?token={token}"
-            with connect(websocket_url) as client:
-                client.send("lmao ded")
+            with client.connect(websocket_url) as player:
+                # player.send("lmao ded")
+                try:
+                    while True:
+                        print(player.recv())
 
-            print("Waiting for another player to join...")
+                except KeyboardInterrupt:
+                    quit(1)
 
     else:
         while True:
@@ -55,7 +59,7 @@ if __name__ == "__main__":
 
             break
 
-        resp = requests.post(f"{base_server_url}/rooms/join", data={"room_id": room_id})
+        resp = requests.post(f"{base_server_url}/rooms/join", json={"room_id": room_id, "player_name": input("enter nickname: ")})
 
         if resp.status_code != 200:
             print("Unable to request the server!")
@@ -68,5 +72,14 @@ if __name__ == "__main__":
             quit()
 
         else:
-            # websocket here
+            redirect = resp["websocket_redirect"]
+            token = resp["token"]
+            websocket_url = f"{base_server_ws}{redirect}?token={token}"
+            with client.connect(websocket_url) as player:
+                try:
+                    while True:
+                        print(player.recv())
+
+                except KeyboardInterrupt:
+                    quit(1)
             pass

@@ -24,8 +24,9 @@ def generate_room_id() -> str:
     for _ in range(6):
         id += secrets.choice(usable)
 
+    db = get_db()
     while True:
-        if get_room_by_id(get_db(), id):
+        if get_room_by_id(db, id):
             id = ""
             for _ in range(6):
                 id += secrets.choice(usable)
@@ -44,39 +45,68 @@ def generate_url_token() -> str:
 
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: list[tuple[str, WebSocket]] = []
+        self.active_connections: dict[str, list[WebSocket]] = {}
+
+    def add_room(self, room: str):
+        if self.active_connections.get(room):
+            raise Exception("this room already exists in the connections")
+
+        self.active_connections[room] = []
+
+    def delete_room(self, room: str):
+        try:
+            self.active_connections.pop(room)
+        except KeyError:
+            # its okay if keyerror pops up since the database and active_connections
+            # dictionary could be inconsistent, especially when server restarts
+            ...
 
     async def connect(self, room_id: str, websocket: WebSocket):
+        conns = self.__find_all_conn_by_room(room_id)
+        if conns is None:
+            # dont have the condition as `not conns` because that also checks for zero length
+            raise Exception(f"invalid {room_id=}")
+
+        if len(conns) > 2:
+            await websocket.close()
+            return False
+
         await websocket.accept()
-        self.active_connections.append((room_id, websocket))
+        self.active_connections[room_id].append(websocket)
+        return True
 
     def __find_conn_by_websocket(self, websocket: WebSocket):
-        for conn in self.active_connections:
-            if conn[1] == websocket:
-                return conn
+        for room in self.active_connections:
+            if websocket in self.active_connections[room]:
+                return (room, websocket)
+
+        return None
 
     def __find_all_conn_by_room(self, room: str):
-        websocket_list: list[WebSocket] = []
-        for conn in self.active_connections:
-            if conn[0] == room:
-                websocket_list.append(conn[1])
+        return self.active_connections.get(room)
 
-        return websocket_list
-
-    def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(self.__find_conn_by_websocket(websocket))
+    async def disconnect(self, websocket: WebSocket):
+        conn = self.__find_conn_by_websocket(websocket)
+        if conn:
+            room, _ = conn
+            self.active_connections[room].remove(websocket)
+            await websocket.close()
 
     async def send_personal_message(self, message: str, websocket: WebSocket):
-        conn = self.__find_conn_by_websocket(websocket)
-        if not conn:
-            raise Exception("unable to find conn")
-        await conn[1].send_text(message)
+        await websocket.send_text(message)
 
     def is_room_ready(self, room: str):
-        return len(self.__find_all_conn_by_room(room)) == 2
+        conns = self.__find_all_conn_by_room(room)
+        if conns:
+            return len(conns) == 2
+        else:
+            raise Exception(f"invalid room id {room}")
 
     async def broadcast(self, room: str, message: str):
         connections = self.__find_all_conn_by_room(room)
-        print(f"sending '{message=}' to {connections=} in {room=}")
-        for conn in connections:
-            await conn.send_text(message)
+        if connections:
+            print(f"sending '{message=}' to {connections=} in {room=}")
+            for conn in connections:
+                await conn.send_text(message)
+        else:
+            raise Exception(f"invalid room id {room}")

@@ -75,7 +75,7 @@ def create_room(db: Session, room_id: str):
     return room
 
 
-def update_active_rooms(db: Session):
+def update_active_rooms(db: Session, conn_manager):
     # print("updating active rooms")
     active_rooms = get_active_rooms(db).filter(Room.is_active)
 
@@ -83,5 +83,6 @@ def update_active_rooms(db: Session):
         hour_diff = datetime.now() - room.created_on
         if hour_diff.seconds > 60 * 60:
             db.delete(room)
+            conn_manager.delete_room(str(room.room_id))
 
     db.commit()

@@ -20,7 +20,9 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI()
 conn_manager = ConnectionManager()
 
-schedule.every().minute.do(crud.update_active_rooms, db=get_db())
+schedule.every().minute.do(
+    crud.update_active_rooms, db=get_db(), conn_manager=conn_manager
+)
 
 
 def cleaning_job():
@@ -44,6 +46,7 @@ def create_room() -> CreateRoomResponse:
         db = get_db()
         room_id = generate_room_id()
         crud.create_room(db, room_id)
+        conn_manager.add_room(room_id)
 
         return CreateRoomResponse(
             success=True, message="Room created successfully.", room_id=room_id
@@ -106,8 +109,12 @@ def join_room(room_request: JoinRoomRequest) -> JoinRoomResponse:
 
 @app.websocket("/game/{room_id}")
 async def gameplay(websocket: WebSocket, room_id: str, token: str):
-    await conn_manager.connect(room_id, websocket)
     try:
+        connected = await conn_manager.connect(room_id, websocket)
+        if not connected:
+            # room must be full
+            return
+
         db = get_db()
         verified, player_name = crud.verify_player(db, room_id, token)
         if not verified:
@@ -120,31 +127,37 @@ async def gameplay(websocket: WebSocket, room_id: str, token: str):
         playable = conn_manager.is_room_ready(room_id)
 
         if not playable:
-            await conn_manager.send_personal_message("waiting for the other player to join...", websocket)
+            await conn_manager.send_personal_message(
+                "waiting for the other player to join...", websocket
+            )
 
         while not playable:
             playable = conn_manager.is_room_ready(room_id)
             await asyncio.sleep(0.1)
 
-        await conn_manager.send_personal_message(room_id, "starting the game...")
+        await conn_manager.send_personal_message("starting the game...", websocket)
 
         while True:
             data = await websocket.receive_json()
             match data["type"]:
                 case "quit":
-                    conn_manager.disconnect(websocket)
-                    await conn_manager.broadcast(room_id, f"{player_name} left the game.")
+                    await conn_manager.disconnect(websocket)
+                    await conn_manager.broadcast(
+                        room_id, f"{player_name} left the game."
+                    )
                 case "update":
                     conn_manager
             await conn_manager.send_personal_message(f"You wrote: {data}", websocket)
             await conn_manager.broadcast(room_id, f"Client #{player_name} says: {data}")
 
     except (WebSocketDisconnect, websockets.exceptions.ConnectionClosed):
-        conn_manager.disconnect(websocket)
+        await conn_manager.disconnect(websocket)
         await conn_manager.broadcast(room_id, f"Client #{player_name} left the game.")
 
     except Exception as e:
-        print(e)
-        json_str = json.dumps({"message": "An internal server error occured. Try again later."})
+        logging.exception(e)
+        json_str = json.dumps(
+            {"message": "An internal server error occured. Try again later."}
+        )
         await conn_manager.send_personal_message(json_str, websocket)
         await conn_manager.disconnect(websocket)
