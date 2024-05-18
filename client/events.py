@@ -66,16 +66,7 @@ def board_event(board: list[list[int]]):
     """
     A helper function to create an `Event` with `EventType.BOARD`.
     """
-    return Event(
-        EventType.BOARD, {"board": [list(map(lambda x: x.value, row)) for row in board]}
-    )
-
-
-def ask_move_event(player_name: str):
-    """
-    A helper function to create an `Event` with `EventType.ASK_MOVE`.
-    """
-    return Event(EventType.ASK_MOVE, {"player": player_name})
+    return Event(EventType.BOARD, {"board": [list(map(lambda x: x.value, row)) for row in board]})
 
 
 if __name__ == "__main__":

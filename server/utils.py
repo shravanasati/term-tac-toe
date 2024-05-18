@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import secrets
 import string
 
@@ -36,9 +37,15 @@ def generate_url_token() -> str:
     return secrets.token_urlsafe()
 
 
+@dataclass
+class Player:
+    name: str
+    ws: WebSocket
+
+
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: dict[str, list[WebSocket]] = {}
+        self.active_connections: dict[str, list[Player]] = {}
 
     def add_room(self, room: str):
         if self.active_connections.get(room):
@@ -46,8 +53,16 @@ class ConnectionManager:
 
         self.active_connections[room] = []
 
-    def delete_room(self, room: str):
+    def add_player_name(self, room_id: str, player_name: str, ws: WebSocket):
+        for player in self.active_connections[room_id]:
+            if player.ws == ws:
+                player.name = player_name
+
+    async def delete_room(self, room: str):
         try:
+            for i, player in enumerate(self.active_connections[room]):
+                await player.ws.close()
+                self.active_connections[room].pop(i)
             self.active_connections.pop(room)
         except KeyError:
             # its okay if keyerror pops up since the database and active_connections
@@ -65,24 +80,26 @@ class ConnectionManager:
             return False
 
         await websocket.accept()
-        self.active_connections[room_id].append(websocket)
+        self.active_connections[room_id].append(Player("", websocket))
         return True
 
-    def __find_conn_by_websocket(self, websocket: WebSocket):
-        for room in self.active_connections:
-            if websocket in self.active_connections[room]:
-                return (room, websocket)
+    def find_player_by_name(self, room_id: str, player_name: str):
+        for player in self.active_connections[room_id]:
+            if player.name == player_name:
+                return player
 
-        return None
+    def __find_player_by_websocket(self, room_id: str, websocket: WebSocket):
+        for player in self.active_connections[room_id]:
+            if websocket == player.ws:
+                return player
 
     def __find_all_conn_by_room(self, room: str):
         return self.active_connections.get(room)
 
-    async def disconnect(self, websocket: WebSocket):
-        conn = self.__find_conn_by_websocket(websocket)
-        if conn:
-            room, _ = conn
-            self.active_connections[room].remove(websocket)
+    async def disconnect(self, room_id: str, websocket: WebSocket):
+        player = self.__find_player_by_websocket(room_id, websocket)
+        if player:
+            self.active_connections[room_id].remove(player)
             await websocket.close()
 
     async def send_personal_message(self, message: str, websocket: WebSocket):
@@ -103,7 +120,7 @@ class ConnectionManager:
         if connections:
             print(f"sending '{message=}' to {connections=} in {room=}")
             for conn in connections:
-                await conn.send_text(message)
+                await conn.ws.send_text(message)
         else:
             raise Exception(f"invalid room id {room}")
 
@@ -111,6 +128,6 @@ class ConnectionManager:
         connections = self.__find_all_conn_by_room(room)
         if connections:
             for conn in connections:
-                await self.send_event(event, conn)
+                await self.send_event(event, conn.ws)
         else:
             raise Exception(f"invalid room id {room}")

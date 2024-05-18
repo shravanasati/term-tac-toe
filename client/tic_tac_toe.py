@@ -8,7 +8,7 @@ from enum import UNIQUE, Enum, StrEnum, auto, verify
 from itertools import cycle
 from pathlib import Path
 from threading import Thread
-from typing import Optional
+from typing import Any, Optional
 
 from rich import print
 from rich.align import Align
@@ -59,6 +59,10 @@ class CheckWinResult:
     winner: Optional[str] = None
     coordinates: list[tuple[int, int]] = None
 
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]):
+        return cls(**d)
+
 
 @dataclass(frozen=True, order=True)
 class Move:
@@ -68,10 +72,6 @@ class Move:
 
     pos: int
     marker: str
-
-    @classmethod
-    def from_dict(cls, d):
-        return cls(**d)
 
     def asdict(self):
         return asdict(self)
@@ -458,12 +458,16 @@ class TicTacToe:
         return 0  # Tie
 
     def minimax(self, current_player: Cell, maximizing_player: Cell, depth: int):
-        minimizing_player = Cell.PLAYER if maximizing_player == Cell.COMPUTER else Cell.COMPUTER
+        minimizing_player = (
+            Cell.PLAYER if maximizing_player == Cell.COMPUTER else Cell.COMPUTER
+        )
         # not using self.game_outcome because it displays board too
         if self.check_completion() or self.check_win().victory:
             return None, self.get_score(maximizing_player)
 
-        best_score = float("-inf") if current_player == maximizing_player else float("inf")
+        best_score = (
+            float("-inf") if current_player == maximizing_player else float("inf")
+        )
         best_move = None
 
         available_moves = []
@@ -477,19 +481,25 @@ class TicTacToe:
             self.board[move[0]][move[1]] = current_player
 
             # recursively call minimax for other player
-            opp_player = Cell.PLAYER if current_player == Cell.COMPUTER else Cell.COMPUTER
+            opp_player = (
+                Cell.PLAYER if current_player == Cell.COMPUTER else Cell.COMPUTER
+            )
             _, score = self.minimax(opp_player, maximizing_player, depth + 1)
             # score += depth
 
             # undo the move
             self.board[move[0]][move[1]] = Cell.EMPTY
-            if (current_player == maximizing_player and score > best_score) or (current_player == minimizing_player and score < best_score):
+            if (current_player == maximizing_player and score > best_score) or (
+                current_player == minimizing_player and score < best_score
+            ):
                 best_score = score
                 best_move = move
 
         return best_move, best_score
 
-    def _fill_computer_cell_hard(self, minimax: bool = True, maximizing_player: Cell = Cell.COMPUTER) -> tuple[int, int]:
+    def _fill_computer_cell_hard(
+        self, minimax: bool = True, maximizing_player: Cell = Cell.COMPUTER
+    ) -> tuple[int, int]:
         if minimax:
             move, score = self.minimax(maximizing_player, maximizing_player, 1)
             logging.debug(
