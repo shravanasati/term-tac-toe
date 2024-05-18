@@ -4,15 +4,8 @@ import string
 from fastapi import WebSocket
 
 from models.crud import get_room_by_id
-from models.database import SessionLocal
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        return db
-    finally:
-        db.close()
+from models.database import db_session
+from models.events import Event
 
 
 def generate_room_id() -> str:
@@ -24,9 +17,8 @@ def generate_room_id() -> str:
     for _ in range(6):
         id += secrets.choice(usable)
 
-    db = get_db()
     while True:
-        if get_room_by_id(db, id):
+        if get_room_by_id(db_session, id):
             id = ""
             for _ in range(6):
                 id += secrets.choice(usable)
@@ -95,6 +87,9 @@ class ConnectionManager:
     async def send_personal_message(self, message: str, websocket: WebSocket):
         await websocket.send_text(message)
 
+    async def send_event(self, event: Event, websocket: WebSocket):
+        await websocket.send_json(event.asdict())
+
     def is_room_ready(self, room: str):
         conns = self.__find_all_conn_by_room(room)
         if conns:
@@ -102,11 +97,19 @@ class ConnectionManager:
         else:
             raise Exception(f"invalid room id {room}")
 
-    async def broadcast(self, room: str, message: str):
+    async def broadcast_message(self, room: str, message: str):
         connections = self.__find_all_conn_by_room(room)
         if connections:
             print(f"sending '{message=}' to {connections=} in {room=}")
             for conn in connections:
                 await conn.send_text(message)
+        else:
+            raise Exception(f"invalid room id {room}")
+
+    async def broadcast_event(self, room: str, event: Event):
+        connections = self.__find_all_conn_by_room(room)
+        if connections:
+            for conn in connections:
+                await self.send_event(event, conn)
         else:
             raise Exception(f"invalid room id {room}")

@@ -9,9 +9,3 @@ scripts:
   url: ''
   command: uvicorn app:app
   shell: false
-
-- name: client1
-  url: ''
-  command: 
-  - python -m websockets ws://localhost:8000/game/BVpBDX?token=2aJiOYULnOpT1NLnMkEUtCV2nh2IbmEbn1I0-1ZwKgI
-  shell: false

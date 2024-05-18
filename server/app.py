@@ -1,4 +1,5 @@
 import asyncio
+from contextlib import asynccontextmanager
 import json
 import logging
 from threading import Thread
@@ -10,18 +11,26 @@ from fastapi.responses import HTMLResponse
 import websockets
 
 from models import crud
-from models.database import Base, engine
+from models.database import init_db, db_session
+from models.events import Event, EventType, message_event
 from models.requests import JoinRoomRequest
 from models.responses import CreateRoomResponse, JoinRoomResponse
 
-from utils import ConnectionManager, generate_room_id, generate_url_token, get_db
+from utils import ConnectionManager, generate_room_id, generate_url_token
 
-Base.metadata.create_all(bind=engine)
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
+    db_session.remove()
+
+
+app = FastAPI(lifespan=lifespan)
 conn_manager = ConnectionManager()
 
 schedule.every().minute.do(
-    crud.update_active_rooms, db=get_db(), conn_manager=conn_manager
+    crud.update_active_rooms, db_session, conn_manager=conn_manager
 )
 
 
@@ -43,9 +52,8 @@ def root():
 @app.post("/rooms/create")
 def create_room() -> CreateRoomResponse:
     try:
-        db = get_db()
         room_id = generate_room_id()
-        crud.create_room(db, room_id)
+        crud.create_room(db_session, room_id)
         conn_manager.add_room(room_id)
 
         return CreateRoomResponse(
@@ -67,8 +75,7 @@ def join_room(room_request: JoinRoomRequest) -> JoinRoomResponse:
         failure_response = JoinRoomResponse(
             success=False, message="", websocket_redirect="", token=""
         )
-        db = get_db()
-        room = crud.get_room_by_id(db, room_request.room_id)
+        room = crud.get_room_by_id(db_session, room_request.room_id)
 
         if not room:
             failure_response.message = (
@@ -84,7 +91,10 @@ def join_room(room_request: JoinRoomRequest) -> JoinRoomResponse:
 
         security_token = generate_url_token()
         ok, message = crud.add_player_to_room(
-            db, room_request.room_id, room_request.player_name[:50], security_token
+            db_session,
+            room_request.room_id,
+            room_request.player_name[:50],
+            security_token,
         )
 
         if ok:
@@ -115,44 +125,58 @@ async def gameplay(websocket: WebSocket, room_id: str, token: str):
             # room must be full
             return
 
-        db = get_db()
-        verified, player_name = crud.verify_player(db, room_id, token)
+        verified, player_name = crud.verify_player(db_session, room_id, token)
         if not verified:
             json_str = json.dumps({"message": "cannot verify the player"})
             await conn_manager.send_personal_message(json_str, websocket)
             await conn_manager.disconnect(websocket)
+            return
 
-        await conn_manager.send_personal_message("connection established", websocket)
+        await conn_manager.send_event(
+            message_event("connection established"), websocket
+        )
 
         playable = conn_manager.is_room_ready(room_id)
 
         if not playable:
-            await conn_manager.send_personal_message(
-                "waiting for the other player to join...", websocket
+            await conn_manager.send_event(
+                message_event("waiting for the other player to join..."), websocket
             )
 
         while not playable:
             playable = conn_manager.is_room_ready(room_id)
             await asyncio.sleep(0.1)
 
-        await conn_manager.send_personal_message("starting the game...", websocket)
+        await conn_manager.send_event(message_event("starting the game..."), websocket)
 
         while True:
             data = await websocket.receive_json()
-            match data["type"]:
-                case "quit":
+            event = Event.from_dict(data)
+            match event.type_:
+                case EventType.QUIT:
                     await conn_manager.disconnect(websocket)
-                    await conn_manager.broadcast(
+                    await conn_manager.broadcast_event(
+                        room_id, message_event(f"{player_name} left the game.")
+                    )
+                    await conn_manager.broadcast_message(
                         room_id, f"{player_name} left the game."
                     )
-                case "update":
-                    conn_manager
+                case _:
+                    await conn_manager.send_event(
+                        message_event(f"unknown {event=} recieved"), websocket
+                    )
+
             await conn_manager.send_personal_message(f"You wrote: {data}", websocket)
-            await conn_manager.broadcast(room_id, f"Client #{player_name} says: {data}")
+            await conn_manager.broadcast_message(
+                room_id, f"Client #{player_name} says: {data}"
+            )
 
     except (WebSocketDisconnect, websockets.exceptions.ConnectionClosed):
+        # todo handle disconnects
         await conn_manager.disconnect(websocket)
-        await conn_manager.broadcast(room_id, f"Client #{player_name} left the game.")
+        await conn_manager.broadcast_message(
+            room_id, f"Client #{player_name} left the game."
+        )
 
     except Exception as e:
         logging.exception(e)

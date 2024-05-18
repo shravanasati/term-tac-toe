@@ -1,16 +1,16 @@
 from datetime import datetime
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import scoped_session
 
 from .dbmodels import Room
 
 
-def get_room_by_id(db: Session, room_id: str) -> Room | None:
+def get_room_by_id(db: scoped_session, room_id: str) -> Room | None:
     return db.query(Room).filter(Room.room_id == room_id).first()
 
 
 def add_player_to_room(
-    db: Session, room_id: str, player_name: str, token: str
+    db: scoped_session, room_id: str, player_name: str, token: str
 ) -> tuple[bool, str]:
     """
     Adds `player_name` to the room with given `room_id`.
@@ -53,7 +53,7 @@ def add_player_to_room(
         return False, "This room is already full."
 
 
-def verify_player(db: Session, room_id: str, token: str) -> tuple[bool, str]:
+def verify_player(db: scoped_session, room_id: str, token: str) -> tuple[bool, str]:
     room: Room = get_room_by_id(db, room_id)
     if room.token1 == token:
         return True, room.player1
@@ -63,11 +63,11 @@ def verify_player(db: Session, room_id: str, token: str) -> tuple[bool, str]:
         return False, ""
 
 
-def get_active_rooms(db: Session):
+def get_active_rooms(db: scoped_session):
     return db.query(Room).filter(Room.is_active)
 
 
-def create_room(db: Session, room_id: str):
+def create_room(db: scoped_session, room_id: str):
     room = Room(room_id=room_id)
     db.add(room)
     db.commit()
@@ -75,7 +75,7 @@ def create_room(db: Session, room_id: str):
     return room
 
 
-def update_active_rooms(db: Session, conn_manager):
+def update_active_rooms(db: scoped_session, conn_manager):
     # print("updating active rooms")
     active_rooms = get_active_rooms(db).filter(Room.is_active)
 

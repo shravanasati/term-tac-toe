@@ -1,6 +1,7 @@
+import asyncio
 import requests
 from rich.prompt import Prompt
-from websockets.sync import client
+import websockets
 
 base_server_url = "http://127.0.0.1:8000"
 base_server_ws = "ws://127.0.0.1:8000"
@@ -9,7 +10,8 @@ base_server_ws = "ws://127.0.0.1:8000"
 # todo check for websocket redirect url in join room response
 # todo commas and symbols not allowed in player name
 
-if __name__ == "__main__":
+
+async def main():
     prompt_text = "What do you want to do? \n1. Create a room \n2. Join a room\n"
     choice = Prompt.ask(prompt_text, choices=["1", "2"])
 
@@ -31,7 +33,9 @@ if __name__ == "__main__":
             print(f"Room with room id `{room_id}` created successfully.")
             player = Prompt.ask("Enter a nickname")
             payload = {"room_id": room_id, "player_name": player}
-            join_req = requests.post(f"{base_server_url}/rooms/join", json=payload).json()
+            join_req = requests.post(
+                f"{base_server_url}/rooms/join", json=payload
+            ).json()
             print(join_req)
             if not join_req["success"]:
                 print("Unable to join the room.")
@@ -41,11 +45,11 @@ if __name__ == "__main__":
             redirect = join_req["websocket_redirect"]
             token = join_req["token"]
             websocket_url = f"{base_server_ws}{redirect}?token={token}"
-            with client.connect(websocket_url) as player:
+            async with websockets.connect(websocket_url) as player:
                 # player.send("lmao ded")
                 try:
                     while True:
-                        print(player.recv())
+                        print(await player.recv())
 
                 except KeyboardInterrupt:
                     quit(1)
@@ -59,7 +63,10 @@ if __name__ == "__main__":
 
             break
 
-        resp = requests.post(f"{base_server_url}/rooms/join", json={"room_id": room_id, "player_name": input("enter nickname: ")})
+        resp = requests.post(
+            f"{base_server_url}/rooms/join",
+            json={"room_id": room_id, "player_name": input("enter nickname: ")},
+        )
 
         if resp.status_code != 200:
             print("Unable to request the server!")
@@ -75,11 +82,16 @@ if __name__ == "__main__":
             redirect = resp["websocket_redirect"]
             token = resp["token"]
             websocket_url = f"{base_server_ws}{redirect}?token={token}"
-            with client.connect(websocket_url) as player:
+            print(websocket_url)
+            async with websockets.connect(websocket_url) as player:
                 try:
                     while True:
-                        print(player.recv())
+                        print(await player.recv())
 
                 except KeyboardInterrupt:
                     quit(1)
             pass
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

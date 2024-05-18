@@ -151,11 +151,10 @@ class TicTacToe:
         app_dir = Path.home() / ".tictactoe"
         app_dir.mkdir(exist_ok=True)
 
-        logs_dir = app_dir / "logs"
-        logs_dir.mkdir(exist_ok=True)
-
-        recordings_dir = app_dir / "recordings"
-        recordings_dir.mkdir(exist_ok=True)
+        subdirs = ["logs", "recordings"]
+        for subdir in subdirs:
+            subdir_path = app_dir / subdir
+            subdir_path.mkdir(exist_ok=True)
 
         return app_dir
 

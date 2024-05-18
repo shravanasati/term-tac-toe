@@ -1,18 +1,34 @@
+import os
+
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, scoped_session, sessionmaker
 
+load_dotenv()
 
-MYSQL_USERNAME = "root"
-MYSQL_PASSWORD = "oursql1234"
-MYSQL_HOST = "localhost"
-DB_NAME = "tictactoe"
+MYSQL_USERNAME = os.environ["MYSQL_USERNAME"]
+MYSQL_PASSWORD = os.environ["MYSQL_PASSWORD"]
+MYSQL_HOST = os.environ["MYSQL_HOST"]
+MYSQL_PORT = os.environ["MYSQL_PORT"]
+DB_NAME = os.environ["DB_NAME"]
+DB_POOL_SIZE = int(os.environ["DB_POOL_SIZE"])
+DB_POOL_RECYCLE = int(os.environ["DB_POOL_RECYCLE"])
 
-SQLALCHEMY_DATABASE_URL = (
-    f"mysql+pymysql://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@{MYSQL_HOST}/{DB_NAME}"
+DB_CONNECTION_URI = f"mysql+pymysql://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{DB_NAME}"
+engine = create_engine(
+    DB_CONNECTION_URI,
+    pool_size=DB_POOL_SIZE,
+    pool_recycle=DB_POOL_RECYCLE,
+    pool_pre_ping=True,
 )
-
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
+db_session = scoped_session(
+    sessionmaker(autocommit=False, autoflush=False, bind=engine)
+)
 Base = declarative_base()
+Base.query = db_session.query_property()
+
+
+def init_db():
+    from . import dbmodels
+
+    Base.metadata.create_all(bind=engine)
