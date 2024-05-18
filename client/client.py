@@ -73,11 +73,11 @@ async def main():
             quit(1)
 
         resp = resp.json()
+        print(resp)
         if not resp["success"]:
             print("Cannot join the room.")
             print(resp["message"])
             quit()
-
         else:
             redirect = resp["websocket_redirect"]
             token = resp["token"]

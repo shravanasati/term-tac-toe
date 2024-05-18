@@ -11,26 +11,25 @@ from fastapi.responses import HTMLResponse
 import websockets
 
 from models import crud
-from models.database import init_db, db_session
+from models.database import init_db
 from models.events import Event, EventType, message_event
 from models.requests import JoinRoomRequest
 from models.responses import CreateRoomResponse, JoinRoomResponse
 
-from utils import ConnectionManager, generate_room_id, generate_url_token
+from utils import ConnectionManager, generate_room_id, generate_url_token, get_db
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
     yield
-    db_session.remove()
 
 
 app = FastAPI(lifespan=lifespan)
 conn_manager = ConnectionManager()
 
 schedule.every().minute.do(
-    crud.update_active_rooms, db_session, conn_manager=conn_manager
+    crud.update_active_rooms, db=get_db(), conn_manager=conn_manager
 )
 
 
@@ -52,8 +51,9 @@ def root():
 @app.post("/rooms/create")
 def create_room() -> CreateRoomResponse:
     try:
+        db = get_db()
         room_id = generate_room_id()
-        crud.create_room(db_session, room_id)
+        crud.create_room(room_id, db)
         conn_manager.add_room(room_id)
 
         return CreateRoomResponse(
@@ -75,7 +75,8 @@ def join_room(room_request: JoinRoomRequest) -> JoinRoomResponse:
         failure_response = JoinRoomResponse(
             success=False, message="", websocket_redirect="", token=""
         )
-        room = crud.get_room_by_id(db_session, room_request.room_id)
+        db = get_db()
+        room = crud.get_room_by_id(room_request.room_id, db)
 
         if not room:
             failure_response.message = (
@@ -91,10 +92,10 @@ def join_room(room_request: JoinRoomRequest) -> JoinRoomResponse:
 
         security_token = generate_url_token()
         ok, message = crud.add_player_to_room(
-            db_session,
             room_request.room_id,
             room_request.player_name[:50],
             security_token,
+            db,
         )
 
         if ok:
@@ -125,7 +126,9 @@ async def gameplay(websocket: WebSocket, room_id: str, token: str):
             # room must be full
             return
 
-        verified, player_name = crud.verify_player(db_session, room_id, token)
+        db = get_db()
+
+        verified, player_name = crud.verify_player(room_id, token, db)
         if not verified:
             json_str = json.dumps({"message": "cannot verify the player"})
             await conn_manager.send_personal_message(json_str, websocket)

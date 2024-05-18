@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "term-tac-toe"
+version = "0.1.0"
+description = "a multiplayer tic tac toe game for the terminal"
+authors = ["Shravan Asati <dev.shravan@protonmail.com>"]
+license = "MIT"
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.111.0"
+SQLAlchemy = "^1"
+python-dotenv = "^1.0.1"
+schedule = "^1.2.1"
+pymysql = "^1.1.0"
+requests = "^2.31.0"
+websockets = "^12.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

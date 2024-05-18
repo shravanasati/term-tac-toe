@@ -3,8 +3,7 @@ import string
 
 from fastapi import WebSocket
 
-from models.crud import get_room_by_id
-from models.database import db_session
+from models.crud import get_room_by_id, get_db
 from models.events import Event
 
 
@@ -17,8 +16,10 @@ def generate_room_id() -> str:
     for _ in range(6):
         id += secrets.choice(usable)
 
+    db = get_db()
+
     while True:
-        if get_room_by_id(db_session, id):
+        if get_room_by_id(id, db):
             id = ""
             for _ in range(6):
                 id += secrets.choice(usable)

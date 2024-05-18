@@ -1,16 +1,25 @@
 from datetime import datetime
 
-from sqlalchemy.orm import scoped_session
+from sqlalchemy.orm import Session
 
 from .dbmodels import Room
+from .database import SessionLocal
 
 
-def get_room_by_id(db: scoped_session, room_id: str) -> Room | None:
-    return db.query(Room).filter(Room.room_id == room_id).first()
+def get_db():
+    db = SessionLocal()
+    try:
+        return db
+    finally:
+        db.close()
+
+
+def get_room_by_id(room_id: str, db: Session) -> Room | None:
+    return (db).query(Room).filter_by(room_id=room_id).first()
 
 
 def add_player_to_room(
-    db: scoped_session, room_id: str, player_name: str, token: str
+    room_id: str, player_name: str, token: str, db: Session
 ) -> tuple[bool, str]:
     """
     Adds `player_name` to the room with given `room_id`.
@@ -53,8 +62,11 @@ def add_player_to_room(
         return False, "This room is already full."
 
 
-def verify_player(db: scoped_session, room_id: str, token: str) -> tuple[bool, str]:
-    room: Room = get_room_by_id(db, room_id)
+def verify_player(room_id: str, token: str, db: Session) -> tuple[bool, str]:
+    room = get_room_by_id(room_id, db)
+    if not room:
+        print("no room found")
+        return False, ""
     if room.token1 == token:
         return True, room.player1
     elif room.token2 == token:
@@ -63,11 +75,11 @@ def verify_player(db: scoped_session, room_id: str, token: str) -> tuple[bool, s
         return False, ""
 
 
-def get_active_rooms(db: scoped_session):
+def get_active_rooms(db: Session):
     return db.query(Room).filter(Room.is_active)
 
 
-def create_room(db: scoped_session, room_id: str):
+def create_room(room_id: str, db: Session):
     room = Room(room_id=room_id)
     db.add(room)
     db.commit()
@@ -75,7 +87,7 @@ def create_room(db: scoped_session, room_id: str):
     return room
 
 
-def update_active_rooms(db: scoped_session, conn_manager):
+def update_active_rooms(conn_manager, db: Session):
     # print("updating active rooms")
     active_rooms = get_active_rooms(db).filter(Room.is_active)
 
