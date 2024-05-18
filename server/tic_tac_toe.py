@@ -8,7 +8,7 @@ from enum import UNIQUE, Enum, StrEnum, auto, verify
 from itertools import cycle
 from pathlib import Path
 from threading import Thread
-from typing import Optional
+from typing import Optional, Any
 
 from rich import print
 from rich.align import Align
