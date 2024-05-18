@@ -59,6 +59,10 @@ class CheckWinResult:
     winner: Optional[str] = None
     coordinates: list[tuple[int, int]] = None
 
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]):
+        return cls(**d)
+
 
 @dataclass(frozen=True, order=True)
 class Move:
