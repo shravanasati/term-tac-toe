@@ -3,7 +3,6 @@ browser: firefox
 include_only: ["*.py"]
 poll_interval: 500
 browser_wait_interval: 1000
-follow_symlinks: false
 scripts:
 - name: server
   url: ''

@@ -1,5 +1,6 @@
 import asyncio
 import json
+import re
 import requests
 from rich.prompt import Prompt
 import websockets
@@ -38,9 +39,10 @@ async def main():
         room_id = create_room()
         print(f"Room with room id `{room_id}` created successfully.")
     else:
+        room_id_regex = re.compile(r"[\dA-Za-z]{6}")
         while True:
             room_id = Prompt.ask("Enter the six-digit room id")
-            if len(room_id) != 6:
+            if not room_id_regex.match(room_id):
                 print("Invalid room id, try again.")
                 continue
 

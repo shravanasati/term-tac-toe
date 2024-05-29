@@ -13,8 +13,8 @@ fastapi = "^0.111.0"
 SQLAlchemy = "^1"
 python-dotenv = "^1.0.1"
 schedule = "^1.2.1"
-pymysql = "^1.1.0"
-requests = "^2.31.0"
+pymysql = "^1.1.1"
+requests = "^2.32.0"
 websockets = "^12.0"
 
 

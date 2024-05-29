@@ -169,6 +169,7 @@ async def gameplay(websocket: WebSocket, room_id: str, token: str):
         await conn_manager.broadcast_event(room_id, board_event(game.board))
 
         while True:
+            # todo maintain the game state, player cycle in connection
             current_player_name = next(player_cycle)
             current_player = conn_manager.find_player_by_name(
                 room_id, current_player_name
