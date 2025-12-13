@@ -119,5 +119,10 @@ async def main():
             quit(1)
 
 
-if __name__ == "__main__":
+def cli():
+    """Entry point for the package."""
     asyncio.run(main())
+
+
+if __name__ == "__main__":
+    cli()

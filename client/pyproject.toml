@@ -1,11 +1,17 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "term-tac-toe"
 version = "0.1.0"
-description = "Add your description here"
+description = "Terminal-based Tic-Tac-Toe game"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = [
-    "requests>=2.32.5",
-    "rich>=14.2.0",
-    "websockets>=15.0.1",
-]
+dependencies = ["requests>=2.32.5", "rich>=14.2.0", "websockets>=15.0.1"]
+
+[project.scripts]
+term-tac-toe = "client:cli"
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]

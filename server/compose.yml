@@ -1,4 +1,23 @@
 services:
+  server:
+    build: .
+    container_name: ttt-server
+    ports:
+      - "8000:8000"
+    environment:
+      MYSQL_USERNAME: root
+      MYSQL_PASSWORD: oursql1234
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      DB_NAME: tictactoe
+      DB_POOL_SIZE: 5
+      DB_POOL_RECYCLE: 1800
+
+    depends_on:
+      - mysql
+    networks:
+      - ttt-network
+
   mysql:
     image: mysql:latest
     container_name: ttt-mysql
@@ -10,6 +29,12 @@ services:
       - "33060:33060"
     volumes:
       - mysql_data:/var/lib/mysql
+    networks:
+      - ttt-network
 
 volumes:
   mysql_data:
+
+networks:
+  ttt-network:
+    driver: bridge
