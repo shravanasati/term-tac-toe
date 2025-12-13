@@ -14,7 +14,8 @@ services:
       DB_POOL_RECYCLE: 1800
 
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     networks:
       - ttt-network
 
@@ -31,6 +32,21 @@ services:
       - mysql_data:/var/lib/mysql
     networks:
       - ttt-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-poursql1234",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
 volumes:
   mysql_data:
