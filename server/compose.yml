@@ -1,0 +1,15 @@
+services:
+  mysql:
+    image: mysql:latest
+    container_name: ttt-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: oursql1234
+      MYSQL_DATABASE: tictactoe
+    ports:
+      - "3306:3306"
+      - "33060:33060"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:

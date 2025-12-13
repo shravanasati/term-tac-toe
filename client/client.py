@@ -3,6 +3,9 @@ import json
 import re
 import requests
 from rich.prompt import Prompt
+from rich.console import Console
+from rich.panel import Panel
+from rich.text import Text
 import websockets
 
 from tic_tac_toe import Difficulty, TicTacToe, Cell, CheckWinResult, Move
@@ -11,55 +14,61 @@ from events import Event, EventType
 base_server_url = "http://127.0.0.1:8000"
 base_server_ws = "ws://127.0.0.1:8000"
 
+console = Console()
+
 # todo add validation for player name, must not be greater than 50 chars
 # todo commas and symbols not allowed in player name
 
 
 def create_room():
+    console.print("[bold green]Creating a new room...[/bold green]")
     resp = requests.post(f"{base_server_url}/rooms/create")
 
     if resp.status_code != 200:
-        print("Unable to request the server!")
+        console.print("[bold red]Unable to request the server![/bold red]")
         quit(1)
-    
+
     resp = resp.json()
     if not resp["success"]:
-        print("Cannot create a room.")
-        print(resp["message"])
+        console.print("[bold red]Cannot create a room.[/bold red]")
+        console.print(resp["message"])
         quit()
 
+    console.print(
+        f"[bold green]Room created successfully with ID: {resp['room_id']}[/bold green]"
+    )
     return resp["room_id"]
 
 
 async def main():
+    console.print(
+        Panel.fit("[bold]Welcome to Tic-Tac-Toe![/bold]", border_style="blue")
+    )
     prompt_text = "What do you want to do? \n1. Create a room \n2. Join a room\n"
     choice = Prompt.ask(prompt_text, choices=["1", "2"])
 
     if choice == "1":
         room_id = create_room()
-        print(f"Room with room id `{room_id}` created successfully.")
     else:
         room_id_regex = re.compile(r"[\dA-Za-z]{6}")
         while True:
-            room_id = Prompt.ask("Enter the six-digit room id")
+            room_id = Prompt.ask("[bold]Enter the six-digit room id[/bold]")
             if not room_id_regex.match(room_id):
-                print("Invalid room id, try again.")
+                console.print("[bold red]Invalid room id, try again.[/bold red]")
                 continue
 
             break
 
-    player_name = Prompt.ask("Enter a nickname")
+    player_name = Prompt.ask("[bold]Enter a nickname[/bold]")
     payload = {"room_id": room_id, "player_name": player_name}
-    join_resp = requests.post(
-        f"{base_server_url}/rooms/join", json=payload
-    ).json()
+    join_resp = requests.post(f"{base_server_url}/rooms/join", json=payload).json()
 
-    # print(join_resp)
     if not join_resp["success"]:
-        print("Unable to join the room.")
-        print(join_resp["message"])
+        console.print("[bold red]Unable to join the room.[/bold red]")
+        console.print(join_resp["message"])
         quit(1)
 
+    console.print("[bold green]Successfully joined the room![/bold green]")
     redirect = join_resp["websocket_redirect"]
     token = join_resp["token"]
     websocket_url = f"{base_server_ws}{redirect}?token={token}"
@@ -81,6 +90,7 @@ async def main():
                     case EventType.ASK_MOVE:
                         if event.data["player"] != player_name:
                             continue
+                        console.print("[bold]Your turn![/bold]")
                         pos = game.position_input()
                         move = Move(pos, player_name)
                         move_event = Event(EventType.MOVE, {"move": move.asdict()})
@@ -91,17 +101,22 @@ async def main():
                             list(map(lambda x: Cell(x), row))
                             for row in event.data["board"]
                         ]
-                        game.display_board(CheckWinResult.from_dict(event.data["result"]))
-                        print(event.data["message"])
+                        game.display_board(
+                            CheckWinResult.from_dict(event.data["result"])
+                        )
+                        console.print(f"[bold]{event.data['message']}[/bold]")
                         return
 
                     case EventType.MESSAGE:
-                        print(f"server> {event.data['message']}")
+                        console.print(
+                            f"[bold yellow]server> {event.data['message']}[/bold yellow]"
+                        )
 
                     case _:
                         raise Exception(f"unknown {event=} recieved from server")
 
         except KeyboardInterrupt:
+            console.print("[bold red]Game interrupted.[/bold red]")
             quit(1)
 
 

@@ -1,23 +1,25 @@
-[tool.poetry]
+[project]
 name = "term-tac-toe"
 version = "0.1.0"
 description = "a multiplayer tic tac toe game for the terminal"
-authors = ["Shravan Asati <dev.shravan@protonmail.com>"]
-license = "MIT"
+authors = [{ name = "Shravan Asati", email = "dev.shravan@protonmail.com" }]
+requires-python = ">=3.11,<4"
 readme = "README.md"
-package-mode = false
+license = "MIT"
+dependencies = [
+    "fastapi>=0.111.0,<0.112",
+    "SQLAlchemy>=1,<2",
+    "python-dotenv>=1.0.1,<2",
+    "schedule>=1.2.1,<2",
+    "pymysql>=1.1.1,<2",
+    "requests>=2.32.0,<3",
+    "websockets>=12.0,<13",
+    "cryptography>=46.0.3",
+]
 
-[tool.poetry.dependencies]
-python = "^3.11"
-fastapi = "^0.111.0"
-SQLAlchemy = "^1"
-python-dotenv = "^1.0.1"
-schedule = "^1.2.1"
-pymysql = "^1.1.1"
-requests = "^2.32.0"
-websockets = "^12.0"
-
+[tool.uv]
+package = false
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"

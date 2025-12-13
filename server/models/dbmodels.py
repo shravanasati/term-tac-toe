@@ -1,7 +1,15 @@
-from sqlalchemy import DATETIME, Boolean, Column, String
+from sqlalchemy import DATETIME, Boolean, Column, String, Enum
 from sqlalchemy.sql.functions import now
+from enum import Enum as PyEnum
 
 from .database import Base
+
+
+class GameStatus(str, PyEnum):
+    WAITING = "waiting"
+    PLAYING = "playing"
+    FINISHED = "finished"
+    REMATCH_VOTING = "rematch_voting"
 
 
 class Room(Base):
@@ -14,3 +22,7 @@ class Room(Base):
     token2 = Column(String(43), default="")
     created_on = Column(DATETIME, default=now())
     is_active = Column(Boolean, default=True)
+    game_status = Column(Enum(GameStatus), default=GameStatus.WAITING)
+    winner = Column(String(50), default="")
+    board_state = Column(String(200), default="---------")
+    current_turn = Column(String(50), default="")
