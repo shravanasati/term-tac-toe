@@ -19,6 +19,18 @@ services:
     networks:
       - ttt-network
 
+  caddy:
+    image: caddy:latest
+    container_name: ttt-caddy
+    ports:
+      - "80:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - server
+    networks:
+      - ttt-network
+
   mysql:
     image: mysql:latest
     container_name: ttt-mysql

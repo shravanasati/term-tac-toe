@@ -1,0 +1,14 @@
+:80 {
+    reverse_proxy server:8000 {
+        header_up X-Forwarded-Proto {http.request.proto}
+        header_up X-Forwarded-Host {http.request.host}
+        header_up X-Forwarded-For {http.remote.host}
+        
+        # WebSocket support
+        transport http {
+            dial_timeout 10s
+            response_header_timeout 20s
+            expect_continue_timeout 2s
+        }
+    }
+}
