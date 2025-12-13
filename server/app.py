@@ -72,7 +72,7 @@ async def room_game_loop(room_id: str) -> None:
         if players is None:
             return
 
-        if len(players) == 2:
+        if len(players) == 2 and all(p.name for p in players):
             break
 
         if len(players) == 1 and not sent_waiting:

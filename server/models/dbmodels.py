@@ -1,5 +1,6 @@
+from datetime import datetime
+
 from sqlalchemy import DATETIME, Boolean, Column, String, Enum
-from sqlalchemy.sql.functions import now
 from enum import Enum as PyEnum
 
 from .database import Base
@@ -20,7 +21,8 @@ class Room(Base):
     player2 = Column(String(50), default="")
     token1 = Column(String(43), default="")
     token2 = Column(String(43), default="")
-    created_on = Column(DATETIME, default=now())
+    # Use Python UTC time to avoid timezone skew between DB server time and app local time.
+    created_on = Column(DATETIME, default=datetime.utcnow)
     is_active = Column(Boolean, default=True)
     game_status = Column(Enum(GameStatus), default=GameStatus.WAITING)
     winner = Column(String(50), default="")

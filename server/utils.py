@@ -67,16 +67,20 @@ class ConnectionManager:
         self.active_connections[room_id].append(Player(player_name, ws))
 
     async def delete_room(self, room: str):
-        try:
-            for i, player in enumerate(self.active_connections[room]):
+        players = self.active_connections.get(room)
+        if players is None:
+            return
+
+        for player in list(players):
+            try:
                 await player.ws.close()
-                self.active_connections[room].pop(i)
-            self.active_connections.pop(room)
-            self._incoming_events.pop(room, None)
-        except KeyError:
-            # its okay if keyerror pops up since the database and active_connections
-            # dictionary could be inconsistent, especially when server restarts
-            ...
+            except RuntimeError:
+                pass
+            except Exception:
+                pass
+
+        self.active_connections.pop(room, None)
+        self._incoming_events.pop(room, None)
 
     async def connect(self, room_id: str, websocket: WebSocket):
         conns = self.__find_all_conn_by_room(room_id)

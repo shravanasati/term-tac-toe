@@ -104,14 +104,24 @@ def create_room(room_id: str, db: Session):
 
 
 async def update_active_rooms(conn_manager, db: Session):
-    # print("updating active rooms")
+    print("updating active rooms")
     active_rooms = get_active_rooms(db)
 
     for room in active_rooms:
-        hour_diff = datetime.now() - room.created_on
-        if hour_diff.seconds > 60 * 60 * 2:
+        if room.created_on is None:
+            continue
+
+        # Guard: never drop rooms that currently have connected players.
+        # (Active games / waiting rooms should not be cleaned up.)
+        room_id = str(room.room_id)
+        active_conns = getattr(conn_manager, "active_connections", {}).get(room_id)
+        if active_conns is not None and len(active_conns) > 0:
+            continue
+
+        age_seconds = (datetime.utcnow() - room.created_on).total_seconds()
+        if age_seconds > 60 * 60 * 2:
             db.delete(room)
-            await conn_manager.delete_room(str(room.room_id))
+            await conn_manager.delete_room(room_id)
 
     db.commit()
 
