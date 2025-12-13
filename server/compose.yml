@@ -20,14 +20,14 @@ services:
       - ttt-network
 
   mysql:
-    image: mysql:latest
+    image: mysql:8.0-alpine
     container_name: ttt-mysql
     environment:
       MYSQL_ROOT_PASSWORD: oursql1234
       MYSQL_DATABASE: tictactoe
+      MYSQL_ROOT_HOST: "%"
     ports:
       - "3306:3306"
-      - "33060:33060"
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
@@ -47,6 +47,12 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
 
 volumes:
   mysql_data:
