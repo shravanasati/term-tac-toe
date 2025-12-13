@@ -5,7 +5,6 @@ import requests
 from rich.prompt import Prompt
 from rich.console import Console
 from rich.panel import Panel
-from rich.text import Text
 import websockets
 
 from tic_tac_toe import Difficulty, TicTacToe, Cell, CheckWinResult, Move
