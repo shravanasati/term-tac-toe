@@ -20,7 +20,7 @@ services:
       - ttt-network
 
   mysql:
-    image: mysql:8.0-alpine
+    image: mysql:latest
     container_name: ttt-mysql
     environment:
       MYSQL_ROOT_PASSWORD: oursql1234
