@@ -10,8 +10,10 @@ import websockets
 from tic_tac_toe import Difficulty, TicTacToe, Cell, CheckWinResult, Move
 from events import Event, EventType
 
-base_server_url = "http://127.0.0.1:8000"
-base_server_ws = "ws://127.0.0.1:8000"
+server_ip = "104.248.22.239"
+
+base_server_url = f"http://{server_ip}"
+base_server_ws = f"ws://{server_ip}"
 
 console = Console()
 
