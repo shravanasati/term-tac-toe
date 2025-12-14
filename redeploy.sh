@@ -1,4 +1,4 @@
 set -euo
 git pull
-docker compose down
-docker compose up --build -d
+docker compose -f ./src/server/compose.yml down
+docker compose -f ./src/server/compose.yml up --build -d
