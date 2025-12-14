@@ -14,14 +14,14 @@ dependencies = [
     "pymysql>=1.1.1,<2",
     "requests>=2.32.0,<3",
     "cryptography>=46.0.3",
-    "common",
+    "ttt-common",
 ]
 
 [tool.uv]
 package = false
 
 [tool.uv.sources]
-common = { workspace = true }
+ttt-common = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

@@ -1,5 +1,5 @@
 [project]
-name = "common"
+name = "ttt-common"
 version = "0.1.0"
 description = "Shared functions and classes for term-tac-toe."
 readme = "README.md"

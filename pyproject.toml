@@ -2,10 +2,10 @@
 name = "term-tac-toe"
 version = "0.1.0"
 requires-python = ">=3.11"
-dependencies = ["common", "ttt-server"]
+dependencies = ["ttt-common", "ttt-server"]
 
 [tool.uv.sources]
-common = { workspace = true }
+ttt-common = { workspace = true }
 ttt-server = { workspace = true }
 
 [tool.uv.workspace]
