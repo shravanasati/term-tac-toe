@@ -1,6 +1,7 @@
 from dataclasses import asdict, dataclass
 from enum import StrEnum, auto
 from typing import Any
+
 from tic_tac_toe import Cell
 
 

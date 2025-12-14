@@ -1,6 +1,7 @@
 .venv
 .crush
 .vscode
+.ruff_cache
 
 # --- Version Control & Local Dev Artifacts ---
 .git

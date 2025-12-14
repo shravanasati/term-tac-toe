@@ -2,14 +2,15 @@ import argparse
 import asyncio
 import json
 import re
+
 import requests
-from rich.prompt import Prompt
+import websockets
 from rich.console import Console
 from rich.panel import Panel
-import websockets
+from rich.prompt import Prompt
 
-from common.tic_tac_toe import Difficulty, TicTacToe, Cell, CheckWinResult, Move
 from common.events import Event, EventType
+from common.tic_tac_toe import Cell, CheckWinResult, Difficulty, Move, TicTacToe
 
 DEFAULT_SERVER_IP = "104.248.22.239"
 
