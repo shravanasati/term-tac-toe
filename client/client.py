@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 import json
 import re
@@ -10,10 +11,7 @@ import websockets
 from tic_tac_toe import Difficulty, TicTacToe, Cell, CheckWinResult, Move
 from events import Event, EventType
 
-server_ip = "104.248.22.239"
-
-base_server_url = f"http://{server_ip}"
-base_server_ws = f"ws://{server_ip}"
+DEFAULT_SERVER_IP = "104.248.22.239"
 
 console = Console()
 
@@ -21,7 +19,7 @@ console = Console()
 # todo commas and symbols not allowed in player name
 
 
-def create_room():
+def create_room(base_server_url):
     console.print("[bold green]Creating a new room...[/bold green]")
     resp = requests.post(f"{base_server_url}/rooms/create")
 
@@ -41,7 +39,9 @@ def create_room():
     return resp["room_id"]
 
 
-async def main():
+async def main(server_ip):
+    base_server_url = f"http://{server_ip}"
+    base_server_ws = f"ws://{server_ip}"
     console.print(
         Panel.fit("[bold]Welcome to Tic-Tac-Toe![/bold]", border_style="blue")
     )
@@ -49,7 +49,7 @@ async def main():
     choice = Prompt.ask(prompt_text, choices=["1", "2"])
 
     if choice == "1":
-        room_id = create_room()
+        room_id = create_room(base_server_url)
     else:
         room_id_regex = re.compile(r"[\dA-Za-z]{6}")
         while True:
@@ -121,9 +121,21 @@ async def main():
             quit(1)
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--server",
+        "-s",
+        default=DEFAULT_SERVER_IP,
+        help="IP address or hostname of the game server",
+    )
+    return parser.parse_args()
+
+
 def cli():
     """Entry point for the package."""
-    asyncio.run(main())
+    args = parse_args()
+    asyncio.run(main(args.server))
 
 
 if __name__ == "__main__":
