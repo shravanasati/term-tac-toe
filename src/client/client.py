@@ -8,8 +8,8 @@ from rich.console import Console
 from rich.panel import Panel
 import websockets
 
-from tic_tac_toe import Difficulty, TicTacToe, Cell, CheckWinResult, Move
-from events import Event, EventType
+from common.tic_tac_toe import Difficulty, TicTacToe, Cell, CheckWinResult, Move
+from common.events import Event, EventType
 
 DEFAULT_SERVER_IP = "104.248.22.239"
 

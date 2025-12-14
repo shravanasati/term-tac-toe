@@ -11,7 +11,7 @@ import websockets
 
 from models import crud
 from models.database import init_db
-from models.events import (
+from common.events import (
     EventType,
     ask_move_event,
     board_event,
@@ -21,8 +21,9 @@ from models.events import (
 from models.requests import JoinRoomRequest
 from models.responses import CreateRoomResponse, JoinRoomResponse
 
-from tic_tac_toe import LMPTicTacToe, Move
-from utils import ConnectionManager, generate_room_id, generate_url_token
+from common.tic_tac_toe import LMPTicTacToe, Move
+from utils import generate_room_id, generate_url_token
+from conn_manager import ConnectionManager
 
 logging.basicConfig(level=logging.DEBUG)
 

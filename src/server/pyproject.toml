@@ -1,5 +1,5 @@
 [project]
-name = "term-tac-toe"
+name = "ttt-server"
 version = "0.1.0"
 description = "a multiplayer tic tac toe game for the terminal"
 authors = [{ name = "Shravan Asati", email = "dev.shravan@protonmail.com" }]
@@ -13,12 +13,15 @@ dependencies = [
     "schedule>=1.2.1,<2",
     "pymysql>=1.1.1,<2",
     "requests>=2.32.0,<3",
-    "websockets>=12.0,<13",
     "cryptography>=46.0.3",
+    "common",
 ]
 
 [tool.uv]
 package = false
+
+[tool.uv.sources]
+common = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]
