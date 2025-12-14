@@ -1,8 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description"
+    content="Terminal-based multiplayer Tic-Tac-Toe game with minimal design and real-time gameplay">
+  <meta name="keywords" content="tic tac toe, terminal game, multiplayer game, python game">
   <title>Term Tac Toe</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap');
@@ -63,7 +67,8 @@
       border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
-    code, pre {
+    code,
+    pre {
       font-family: 'JetBrains Mono', 'Fira Code', monospace;
       color: var(--accent);
     }
@@ -71,17 +76,28 @@
     .install-steps {
       display: grid;
       gap: 1rem;
+      padding-left: 1.1rem;
+      list-style-position: outside;
     }
 
     .install-step {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.75rem;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 1rem;
+      align-items: start;
     }
 
-    .install-step::before {
-      content: '>';
-      font-size: 1.1rem;
+    .install-step h3 {
+      margin: 0 0 0.25rem 0;
+      font-size: 1.05rem;
+    }
+
+    .install-step pre {
+      margin: 0;
+      background: rgba(0, 0, 0, 0.05);
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      min-width: 220px;
     }
 
     .repo-link {
@@ -96,19 +112,37 @@
 
     @media (max-width: 640px) {
       body {
-        padding: 1.5rem;
+        padding: 1rem;
       }
 
       .card {
-        padding: 2rem;
+        padding: 1.5rem;
+        border-radius: 20px;
       }
 
-      .install-step::before {
-        content: '>';
+      .install-step {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+      }
+
+      pre {
+        width: 100%;
+        overflow-x: auto;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .card {
+        padding: 1rem;
+      }
+
+      h1 {
+        font-size: 2rem;
       }
     }
   </style>
 </head>
+
 <body>
   <main class="card">
     <p class="tagline">a terminal-born, multiplayer adventure</p>
@@ -122,32 +156,35 @@
 
     <section class="panel">
       <h2>Installation</h2>
-      <div class="install-steps">
-        <div class="install-step">
+      <ol class="install-steps">
+        <li class="install-step">
           <div>
-            <strong>1.</strong>
-            <p>Install the client from PyPI or using pip inside this repository.</p>
+            <h3>Install the client</h3>
+            <p>Install from PyPI or using pip inside this repository:</p>
           </div>
           <pre><code>pip install term-tac-toe</code></pre>
-        </div>
-        <div class="install-step">
+        </li>
+        <li class="install-step">
           <div>
-            <strong>2.</strong>
-            <p>Run the client and point it at a live server IP.</p>
+            <h3>Run the client</h3>
+            <p>By default connects to this server. Only use the <br><code>--server</code> if self-hosting:</p>
           </div>
-          <pre><code>uv run term-tac-toe --server &lt;server-ip&gt;</code></pre>
-        </div>
-      </div>
+          <pre><code>term-tac-toe
+
+# For self-hosting:
+term-tac-toe --server &lt;server-ip&gt;</code></pre>
+        </li>
+      </ol>
     </section>
 
     <section>
       <p>
         Term Tac Toe stays true to the terminal experience while allowing friends to pair
-        up for real-time play. The server endpoint you are viewing now hosts the React-free,
-        websocket-powered game loop. Start it, share the room code, and let the board glow.
+        up for real-time play. The server endpoint you are viewing now hosts the websocket-powered game loop. Start it,
+        share the room code, and let the board glow.
       </p>
       <p>
-        Explore the source and pitching ideas at
+        Explore the source and self-hosting instructions at
         <a class="repo-link" href="https://github.com/shravanasati/term-tac-toe" target="_blank" rel="noopener">
           github.com/shravanasati/term-tac-toe
         </a>
@@ -155,4 +192,5 @@
     </section>
   </main>
 </body>
+
 </html>
