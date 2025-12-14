@@ -58,10 +58,12 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
 conn_manager = ConnectionManager()
 room_game_tasks: dict[str, asyncio.Task[None]] = {}
+
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
-LANDING_PAGE = TEMPLATES_DIR / "landing.html"
+LANDING_PAGE = (TEMPLATES_DIR / "landing.html").read_text()
 
 
 async def room_game_loop(room_id: str) -> None:
@@ -98,6 +100,7 @@ async def room_game_loop(room_id: str) -> None:
     other_player = players[0] if starter_player == players[1] else players[1]
     player_cycle = cycle([starter_player.name, other_player.name])
     game = LMPTicTacToe(starter_player.name, other_player.name, 3)
+    await conn_manager.broadcast_message(room_id, f"{starter_player.name} will be making the first move")
     await conn_manager.broadcast_event(room_id, board_event(game.board))
 
     while True:
@@ -133,6 +136,7 @@ async def room_game_loop(room_id: str) -> None:
                         )
                         continue
 
+					# todo validate this result
                     game.fill_player_cell(move.marker, move.pos)
                     await conn_manager.broadcast_event(room_id, board_event(game.board))
 
@@ -180,7 +184,7 @@ async def room_game_loop(room_id: str) -> None:
 
 @app.get("/")
 def root():
-    return HTMLResponse(LANDING_PAGE.read_text())
+    return HTMLResponse(LANDING_PAGE)
 
 
 @app.post("/rooms/create")
