@@ -4,6 +4,7 @@ from itertools import cycle
 import json
 import logging
 import random
+from pathlib import Path
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 import websockets
@@ -58,6 +59,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 conn_manager = ConnectionManager()
 room_game_tasks: dict[str, asyncio.Task[None]] = {}
+TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
+LANDING_PAGE = TEMPLATES_DIR / "landing.html"
 
 
 async def room_game_loop(room_id: str) -> None:
@@ -176,7 +179,7 @@ async def room_game_loop(room_id: str) -> None:
 
 @app.get("/")
 def root():
-    return HTMLResponse("<h1> The website is under development :) </h1>")
+    return HTMLResponse(LANDING_PAGE.read_text())
 
 
 @app.post("/rooms/create")

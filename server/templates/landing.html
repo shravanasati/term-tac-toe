@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Term Tac Toe</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap');
+
+    :root {
+      color-scheme: dark;
+      --bg: #050809;
+      --panel: rgba(9, 15, 26, 0.85);
+      --accent: #6ff0c5;
+      --accent-strong: #7b61ff;
+      --text: #e5ecf5;
+      --muted: #9baac2;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      background: radial-gradient(circle at top, rgba(111, 240, 197, 0.25), transparent 50%),
+        linear-gradient(135deg, #0b1e33, var(--bg));
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .card {
+      width: min(900px, 100%);
+      border-radius: 28px;
+      padding: 2.5rem;
+      background: var(--panel);
+      backdrop-filter: blur(28px);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55);
+      border: 1px solid rgba(111, 240, 197, 0.3);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: clamp(2.4rem, 3vw, 3rem);
+      letter-spacing: 0.04em;
+    }
+
+    .tagline {
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 20px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    code, pre {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      color: var(--accent);
+    }
+
+    .install-steps {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .install-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    .install-step::before {
+      content: '>';
+      font-size: 1.1rem;
+    }
+
+    .repo-link {
+      color: var(--accent-strong);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .repo-link:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 1.5rem;
+      }
+
+      .card {
+        padding: 2rem;
+      }
+
+      .install-step::before {
+        content: '>';
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <p class="tagline">a terminal-born, multiplayer adventure</p>
+    <header>
+      <h1>Term Tac Toe</h1>
+      <p class="tagline">
+        A terminal-based multiplayer Tic-Tac-Toe game that keeps the vibe minimal,
+        photonic, and impossible to ignore.
+      </p>
+    </header>
+
+    <section class="panel">
+      <h2>Installation</h2>
+      <div class="install-steps">
+        <div class="install-step">
+          <div>
+            <strong>1.</strong>
+            <p>Install the client from PyPI or using pip inside this repository.</p>
+          </div>
+          <pre><code>pip install term-tac-toe</code></pre>
+        </div>
+        <div class="install-step">
+          <div>
+            <strong>2.</strong>
+            <p>Run the client and point it at a live server IP.</p>
+          </div>
+          <pre><code>uv run term-tac-toe --server &lt;server-ip&gt;</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <p>
+        Term Tac Toe stays true to the terminal experience while allowing friends to pair
+        up for real-time play. The server endpoint you are viewing now hosts the React-free,
+        websocket-powered game loop. Start it, share the room code, and let the board glow.
+      </p>
+      <p>
+        Explore the source and pitching ideas at
+        <a class="repo-link" href="https://github.com/shravanasati/term-tac-toe" target="_blank" rel="noopener">
+          github.com/shravanasati/term-tac-toe
+        </a>
+      </p>
+    </section>
+  </main>
+</body>
+</html>

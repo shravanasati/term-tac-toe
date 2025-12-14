@@ -2,8 +2,8 @@ services:
   server:
     build: .
     container_name: ttt-server
-    ports:
-      - "8000:8000"
+    expose: 
+      - 8000
     environment:
       MYSQL_USERNAME: root
       MYSQL_PASSWORD: oursql1234
@@ -19,6 +19,8 @@ services:
     networks:
       - ttt-network
 
+    restart: unless-stopped
+
   caddy:
     image: caddy:latest
     container_name: ttt-caddy
@@ -30,16 +32,18 @@ services:
       - server
     networks:
       - ttt-network
+    restart: unless-stopped
 
   mysql:
     image: mysql:latest
     container_name: ttt-mysql
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: oursql1234
       MYSQL_DATABASE: tictactoe
       MYSQL_ROOT_HOST: "%"
-    ports:
-      - "3306:3306"
+    expose:
+      - 3306
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
