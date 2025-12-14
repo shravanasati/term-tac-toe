@@ -146,7 +146,7 @@ class ConnectionManager:
             raise Exception(f"invalid room id {room}")
         return len(conns) == 2
 
-    async def broadcast_message(self, room: str, message: str):
+    async def _broadcast_message(self, room: str, message: str):
         connections = self.__find_all_conn_by_room(room)
         if connections is None:
             return
@@ -158,5 +158,7 @@ class ConnectionManager:
         connections = self.__find_all_conn_by_room(room)
         if connections is None:
             return
-        for conn in connections:
-            await self.send_event(event, conn.ws)
+        await asyncio.gather(
+            *(self.send_event(event, conn.ws) for conn in connections),
+            return_exceptions=True
+        )

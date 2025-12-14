@@ -100,8 +100,8 @@ async def room_game_loop(room_id: str) -> None:
     other_player = players[0] if starter_player == players[1] else players[1]
     player_cycle = cycle([starter_player.name, other_player.name])
     game = LMPTicTacToe(starter_player.name, other_player.name, 3)
-    await conn_manager.broadcast_message(
-        room_id, f"{starter_player.name} will be making the first move"
+    await conn_manager.broadcast_event(
+        room_id, message_event(f"{starter_player.name} will be making the first move")
     )
     await conn_manager.broadcast_event(room_id, board_event(game.board))
 
