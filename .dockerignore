@@ -1,0 +1,22 @@
+.venv
+.crush
+.vscode
+
+# --- Version Control & Local Dev Artifacts ---
+.git
+.gitignore
+.DS_Store
+*.log
+*.tmp
+
+# --- Python & Build Artifacts ---
+__pycache__
+*.pyc
+.pytest_cache
+
+# --- Exclude Other Services/Components ---
+src/client/
+
+# --- Exclude local configs/secrets ---
+.env
+.env.local

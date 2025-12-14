@@ -1,16 +1,15 @@
 import asyncio
-from contextlib import asynccontextmanager, suppress
-from itertools import cycle
 import json
 import logging
 import random
+from contextlib import asynccontextmanager, suppress
+from itertools import cycle
 from pathlib import Path
+
+import websockets
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
-import websockets
 
-from models import crud
-from models.database import init_db
 from common.events import (
     EventType,
     ask_move_event,
@@ -18,12 +17,13 @@ from common.events import (
     message_event,
     result_event,
 )
-from models.requests import JoinRoomRequest
-from models.responses import CreateRoomResponse, JoinRoomResponse
-
 from common.tic_tac_toe import LMPTicTacToe, Move
-from utils import generate_room_id, generate_url_token
-from conn_manager import ConnectionManager
+from server.conn_manager import ConnectionManager
+from server.models import crud
+from server.models.database import init_db
+from server.models.requests import JoinRoomRequest
+from server.models.responses import CreateRoomResponse, JoinRoomResponse
+from server.utils import generate_room_id, generate_url_token
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -100,7 +100,9 @@ async def room_game_loop(room_id: str) -> None:
     other_player = players[0] if starter_player == players[1] else players[1]
     player_cycle = cycle([starter_player.name, other_player.name])
     game = LMPTicTacToe(starter_player.name, other_player.name, 3)
-    await conn_manager.broadcast_message(room_id, f"{starter_player.name} will be making the first move")
+    await conn_manager.broadcast_message(
+        room_id, f"{starter_player.name} will be making the first move"
+    )
     await conn_manager.broadcast_event(room_id, board_event(game.board))
 
     while True:
@@ -136,7 +138,7 @@ async def room_game_loop(room_id: str) -> None:
                         )
                         continue
 
-					# todo validate this result
+                    # todo validate this result
                     game.fill_player_cell(move.marker, move.pos)
                     await conn_manager.broadcast_event(room_id, board_event(game.board))
 

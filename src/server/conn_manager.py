@@ -1,9 +1,11 @@
-from fastapi.websockets import WebSocketState
-from utils import Player
 import asyncio
-from common.events import Event
+
 from fastapi import WebSocket
-from models.crud import db_session, get_room_by_id
+from fastapi.websockets import WebSocketState
+
+from common.events import Event
+from server.models.crud import db_session, get_room_by_id
+from server.utils import Player
 
 
 class ConnectionManager:

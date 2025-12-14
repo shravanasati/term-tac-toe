@@ -1,6 +1,9 @@
 services:
   server:
-    build: .
+    build: 
+      context: ../..
+      dockerfile: src/server/Dockerfile
+      
     container_name: ttt-server
     expose: 
       - 8000

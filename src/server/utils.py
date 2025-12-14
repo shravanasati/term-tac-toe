@@ -1,10 +1,10 @@
-from dataclasses import dataclass
 import secrets
 import string
+from dataclasses import dataclass
 
 from fastapi import WebSocket
 
-from models.crud import db_session, get_room_by_id
+from server.models.crud import db_session, get_room_by_id
 
 
 def generate_room_id() -> str:

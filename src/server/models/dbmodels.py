@@ -1,7 +1,7 @@
 from datetime import datetime
-
-from sqlalchemy import DATETIME, Boolean, Column, String, Enum
 from enum import Enum as PyEnum
+
+from sqlalchemy import DATETIME, Boolean, Column, Enum, String
 
 from .database import Base
 

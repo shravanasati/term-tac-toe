@@ -7,7 +7,7 @@ requires-python = ">=3.11,<4"
 readme = "README.md"
 license = "MIT"
 dependencies = [
-    "fastapi>=0.111.0,<0.112",
+    "fastapi[standard]>=0.124.0,<0.125",
     "SQLAlchemy>=1,<2",
     "python-dotenv>=1.0.1,<2",
     "schedule>=1.2.1,<2",

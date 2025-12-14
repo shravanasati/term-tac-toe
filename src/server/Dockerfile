@@ -6,9 +6,11 @@ WORKDIR /app
 
 # Copy project files
 COPY pyproject.toml uv.lock .
+COPY src/server/pyproject.toml ./src/server/pyproject.toml
+COPY src/common ./src/common
 
 # Create virtual environment and install dependencies
-RUN uv sync
+RUN uv sync --frozen --no-cache
 
 # Runtime stage
 FROM python:3.11-slim
@@ -22,11 +24,10 @@ COPY --from=builder /app/.venv /app/.venv
 COPY . .
 
 # Set environment variables
-ENV PATH="/app/.venv/bin:$PATH" \
-    PYTHONUNBUFFERED=1
+ENV PYTHONUNBUFFERED=1
 
 # Expose port (adjust if your FastAPI app uses a different port)
 EXPOSE 8000
 
 # Run the FastAPI application with uvicorn
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["/app/.venv/bin/fastapi", "run", "./src/server/app.py", "--host", "0.0.0.0", "--port", "8000"]
